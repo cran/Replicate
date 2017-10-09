@@ -158,7 +158,7 @@ p_orig = function( orig.y, orig.vy, yr, t2, vyr ) {
   Z = ( abs( orig.y - yr ) ) / denom
   
   pval = as.numeric( 2 * ( 1 - pnorm(Z) ) )
-  cat("\nThe p-value of the original study under the null hypothesis of original-replication consistency is:\n")
+  message("\nIf the original study were statistically consistent with the replications, the probability of an estimate in the original study as extreme or more extreme than actually observed is approximately:\n")
   return(pval)
 }
 
