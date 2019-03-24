@@ -4,7 +4,8 @@
 \alias{prob_signif_agree}
 \title{Compute probability of "significance agreement" between replication and original study}
 \usage{
-prob_signif_agree(orig.y, orig.vy, rep.vy, t2 = 0, null = 0, alpha = 0.05)
+prob_signif_agree(orig.y, orig.vy, rep.vy, t2 = 0, null = 0,
+  alpha = 0.05)
 }
 \arguments{
 \item{orig.y}{Effect estimate in the original study. Can be a vector for multiple original studies.}

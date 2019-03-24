@@ -1,7 +1,10 @@
-f1ac056aa25fd309ff2e109b79fc6b1c *DESCRIPTION
+29c265bba47150b99a5c08de11afe854 *DESCRIPTION
 f7abb556d28d335d9125342312e5ad96 *NAMESPACE
-bdf36c6f51607b614eacae0e5f3d2233 *R/Replicate.R
+02adaabb01d251ede550fbb567ee7382 *R/Replicate-deprecated.r
+a4f78ca488f50cfd89a68951d71904c9 *R/Replicate.R
+8166a1d9cf77b885f9e196be1e27d78e *man/Replicate-deprecated.Rd
 c5af215c8dba38fa68633e8779b20af2 *man/p_orig.Rd
-1a0cf075017d637a5c2a698179bb8cfe *man/pred_int.Rd
-6de6f5b25482dabd14fcc4268bcb6e39 *man/prob_signif_agree.Rd
-e822520fcb8cb55903dbdf4fc537d69f *man/stronger_than.Rd
+3de43ff559f2e44da4f44ba1d477e4a7 *man/pred_int.Rd
+fc381bc1db064969a9f98ee44114f981 *man/prob_signif_agree.Rd
+f621209bfb67d058461ed5d6e34f57c7 *man/stronger_than-deprecated.Rd
+1561069dbc185dcf9c1c71cb30db3d66 *tests/testthat/testthat.R

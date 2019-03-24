@@ -4,7 +4,7 @@
 \alias{pred_int}
 \title{Compute prediction interval for replication study given original}
 \usage{
-pred_int(orig.y, orig.vy, rep.y = NULL, rep.vy)
+pred_int(orig.y, orig.vy, rep.y = NULL, rep.vy, level = 0.95)
 }
 \arguments{
 \item{orig.y}{Effect estimate in the original study. Can be a vector for multiple original studies.}
@@ -18,6 +18,8 @@ interval.}
 
 \item{rep.vy}{Estimated variance of effect estimate in the replication study (i.e., its squared standard error).
 Can be a vector for multiple replication studies.}
+
+\item{level}{Coverage level of prediction interval. Typically 0.95.}
 }
 \description{
 Given effect estimates and their variances for one or multiple original studies and one or more replication studies, 
@@ -31,6 +33,10 @@ rep.vy = .2 )
 # calculate prediction intervals for a one-to-one design
 pred_int( orig.y = c(1, 1.3), orig.vy = c(.01, .6),
 rep.y = c(.6, .7), rep.vy = c(.01,.3) )
+
+# no need to pass rep.y if you only want the intervals
+pred_int( orig.y = c(1, 1.3), orig.vy = c(.01, .6),
+rep.vy = c(.01,.3) )
 
 # calculate prediction intervals for a many-to-one design
 pred_int( orig.y = c(1), orig.vy = c(.01), rep.y = c(.6, .7), rep.vy = c(.01,.3) )

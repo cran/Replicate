@@ -35,6 +35,11 @@
 
 prob_signif_agree = Vectorize( function( orig.y, orig.vy, rep.vy, t2 = 0, null = 0, alpha = 0.05 ) {
   
+  # check for bad input
+  if (orig.vy < 0) stop("Original study's variance cannot be negative")
+  if (rep.vy < 0) stop("Replication study's variance cannot be negative")
+  if (t2 < 0) stop("Heterogeneity cannot be negative")
+  
   pooled.SE = sqrt( 2 * t2 + orig.vy + rep.vy )
   
   crit = qnorm( 1 - (alpha/2) )
@@ -62,6 +67,7 @@ prob_signif_agree = Vectorize( function( orig.y, orig.vy, rep.vy, t2 = 0, null =
 #' interval. 
 #' @param rep.vy Estimated variance of effect estimate in the replication study (i.e., its squared standard error).
 #' Can be a vector for multiple replication studies.
+#' @param level Coverage level of prediction interval. Typically 0.95.
 #' @export
 #' @import stats
 #' @examples
@@ -73,14 +79,21 @@ prob_signif_agree = Vectorize( function( orig.y, orig.vy, rep.vy, t2 = 0, null =
 #' pred_int( orig.y = c(1, 1.3), orig.vy = c(.01, .6),
 #' rep.y = c(.6, .7), rep.vy = c(.01,.3) )
 #' 
+#' # no need to pass rep.y if you only want the intervals
+#' pred_int( orig.y = c(1, 1.3), orig.vy = c(.01, .6),
+#' rep.vy = c(.01,.3) )
+#' 
 #' # calculate prediction intervals for a many-to-one design
 #' pred_int( orig.y = c(1), orig.vy = c(.01), rep.y = c(.6, .7), rep.vy = c(.01,.3) )
 
-pred_int = function( orig.y, orig.vy, rep.y = NULL, rep.vy ) {
+pred_int = function( orig.y, orig.vy, rep.y = NULL, rep.vy, level = 0.95 ) {
+  
+  # check for bad input
+  if ( any( orig.vy < 0) ) stop("Original study's variance cannot be negative")
+  if ( any(rep.vy < 0) ) stop("Replication study's variance cannot be negative")
   
   # check that we have a sensible number of originals and replications
-  # should represent either a 1-1 design or a many-to-one design
-  
+  # should represent either a 1-1 design or a many-to-one design 
   if ( ! is.null(rep.y) ) {
     one.to.one = ( max( length(orig.y), length(orig.vy), length(rep.y), length(rep.vy) ) == 
                      min( length(orig.y), length(orig.vy), length(rep.y), length(rep.vy) ) )
@@ -99,15 +112,15 @@ pred_int = function( orig.y, orig.vy, rep.y = NULL, rep.vy ) {
 
   # compute the pred interval
   pooled.SE = sqrt( orig.vy + rep.vy )
-  lo = orig.y - qnorm(.975) * pooled.SE
-  hi = orig.y + qnorm(.975) * pooled.SE
+  alpha = 1 - level
+  lo = orig.y - qnorm(1 - alpha/2) * pooled.SE
+  hi = orig.y + qnorm(1 - alpha/2) * pooled.SE
   
   # check if the replication is in the prediction interval
   if ( ! is.null(rep.y) ) {
     rep.inside = (rep.y > lo) & (rep.y < hi)
   } else rep.inside = NA
   
-  # check if replication is in pred int
   return( list( int.lo = lo, int.hi = hi, rep.inside = rep.inside ) )
   
 }
@@ -154,11 +167,17 @@ pred_int = function( orig.y, orig.vy, rep.y = NULL, rep.vy ) {
  
 p_orig = function( orig.y, orig.vy, yr, t2, vyr ) {
 
+  # check for bad input
+  if (orig.vy < 0) stop("Original study's variance cannot be negative")
+  if (vyr < 0) stop("Replication point estimate's variance cannot be negative")
+  if (t2 < 0) stop("Heterogeneity cannot be negative")
+  
   denom = sqrt( t2 + orig.vy + vyr )
   Z = ( abs( orig.y - yr ) ) / denom
   
   pval = as.numeric( 2 * ( 1 - pnorm(Z) ) )
-  message("\nIf the original study were statistically consistent with the replications, the probability of an estimate in the original study as extreme or more extreme than actually observed is approximately:\n")
+  message("\nIf the original study were statistically consistent with the replications,
+          the probability of an estimate in the original study as extreme or more extreme than actually observed is approximately:\n")
   return(pval)
 }
 
@@ -166,6 +185,10 @@ p_orig = function( orig.y, orig.vy, yr, t2, vyr ) {
 
 #' Probability of true effect stronger than threshold of scientific importance
 #'
+#' This function is now deprecated. You should use \code{MetaUtility::prop_stronger} instead, which 
+#' provides better, more general functionality. The below documentation is temporarily maintained before 
+#' the \code{stronger_than} function is deprecated.
+#' 
 #' Given the original study's effect estimate and its variance, the estimated average true effect size in the 
 #' replications, and the estimated heterogeneity in the replications, computes estimated probability that 
 #' the original study would have an effect estimate at least as extreme as the observed value if the original
@@ -178,64 +201,46 @@ p_orig = function( orig.y, orig.vy, yr, t2, vyr ) {
 #' @param CI.level Confidence level as a proportion
 #' @param tail \code{above} for the probability of an effect above \code{q}; \code{below} for
 #' the probability of an effect below \code{q}.
+#' @name stronger_than-deprecated
+#' @seealso \code{\link{Replicate-deprecated}}
+#' @keywords internal
 #' @export
-#' @import metafor
-#' stats
-#' @details
-#' \code{yr}, \code{vyr}, and \code{t2} can be estimated through, for example, random-effects meta-analysis or
-#' a mixed model fit to the individual subject data. See Mathur & VanderWeele (Appendix) for details of how to specify
-#' such models.  
-#' @examples
-#' # replication estimates (Fisher's z scale) and SEs
-#' # from moral credential example in Mathur & VanderWeele
-#' # (in preparation)
-#' r.fis = c(0.303, 0.078, 0.113, -0.055, 0.056, 0.073,
-#' 0.263, 0.056, 0.002, -0.106, 0.09, 0.024, 0.069, 0.074,
-#' 0.107, 0.01, -0.089, -0.187, 0.265, 0.076, 0.082)
-#' 
-#' r.SE = c(0.111, 0.092, 0.156, 0.106, 0.105, 0.057,
-#' 0.091, 0.089, 0.081, 0.1, 0.093, 0.086, 0.076,
-#' 0.094, 0.065, 0.087, 0.108, 0.114, 0.073, 0.105, 0.04)
-#' 
-#' # meta-analyze the replications
-#' library(metafor)
-#' m = rma.uni( yi = r.fis, vi = r.SE^2, measure = "ZCOR" ) 
-#' 
-#' # probability of true effect above r = 0.10 = 28%
-#' # convert threshold on r scale to Fisher's z
-#' q = .5 * ( log(1 + 0.10) - log(1 - 0.10) )
-#' stronger_than( q = q, yr = m$b, t2 = m$tau2, vyr = m$vb, vt2 = m$se.tau2^2, 
-#' tail="above" )
-#' 
-#' # probability of true effect equally strong in opposite direction = very small
-#' # convert threshold on r scale to Fisher's z
-#' q.star = .5 * ( log(1 - 0.10) - log(1 + 0.10) )
-#' stronger_than( q = q.star, yr = m$b, t2 = m$tau2, vyr = m$vb, vt2 = m$se.tau2^2, 
-#' tail="below" )
-
 
 stronger_than = function( q, yr, vyr=NULL, t2, vt2=NULL,
                           CI.level=0.95, tail ) {
+  .Deprecated("MetaUtility::prop_stronger")
   
-  if( tail == "above" ) {
-    prob = as.numeric( 1 - pnorm( ( q - yr ) / sqrt(t2) ) )
-  }
-  
-  if( tail == "below" ) {
-    prob = as.numeric( pnorm( ( q - yr ) / sqrt(t2) ) )
-  }
-  
-  # SE
-  term1 = sqrt( ( vyr / t2 ) + ( vt2 * ( q - yr )^2 ) / ( 4 * t2^3 ) )
-  term2 = dnorm( ( q - yr ) / sqrt(t2) )
-  SE = as.numeric( term1 * term2 )
-  
-  # confidence interval
-  crit = abs( qnorm( (1 - CI.level)/2 ) )
-  CI.lo = max( 0, prob - crit * SE )
-  CI.hi = min( 1, prob + crit * SE )
-  
-  return( list( prob = prob, SE = SE, CI.lo = CI.lo, CI.hi = CI.hi ) ) 
+  # # check for bad input
+  # if ( !is.null(vyr) ) {
+  #   if (vyr < 0) stop("Replication point estimate's variance cannot be negative")
+  # }
+  # 
+  # if ( !is.null(vt2) ) {
+  #   if (vt2 < 0) stop("Heterogeneity estimate's variance cannot be negative")
+  # }
+  # 
+  # if (t2 < 0) stop("Heterogeneity cannot be negative")
+  # 
+  # 
+  # if( tail == "above" ) {
+  #   prob = as.numeric( 1 - pnorm( ( q - yr ) / sqrt(t2) ) )
+  # }
+  # 
+  # if( tail == "below" ) {
+  #   prob = as.numeric( pnorm( ( q - yr ) / sqrt(t2) ) )
+  # }
+  # 
+  # # SE
+  # term1 = sqrt( ( vyr / t2 ) + ( vt2 * ( q - yr )^2 ) / ( 4 * t2^3 ) )
+  # term2 = dnorm( ( q - yr ) / sqrt(t2) )
+  # SE = as.numeric( term1 * term2 )
+  # 
+  # # confidence interval
+  # crit = abs( qnorm( (1 - CI.level)/2 ) )
+  # CI.lo = max( 0, prob - crit * SE )
+  # CI.hi = min( 1, prob + crit * SE )
+  # 
+  # return( list( prob = prob, SE = SE, CI.lo = CI.lo, CI.hi = CI.hi ) ) 
 }
 
 
